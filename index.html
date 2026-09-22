@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grab Income - Financial Dashboard</title>
+    
+    <!-- Google Fonts: Carter One & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Carter+One&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- PWA Manifest & Theme -->
+    <link id="pwaManifestLink" rel="manifest">
+    <meta name="theme-color" content="#00B14F">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GrabIncome">
+
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 50%, #f8fafc 100%);
+            color: #1e293b;
+            font-size: 13px;
+        }
+        .brand-font {
+            font-family: 'Carter One', cursive, sans-serif;
+        }
+        .touch-swipe-area {
+            touch-action: pan-y;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-16">
+
+    <div id="pwaInstallBanner" class="hidden bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-3 text-sm flex justify-between items-center shadow-lg sticky top-0 z-50 rounded-b-2xl mx-3 mt-2">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-cloud-arrow-down text-xl animate-bounce"></i>
+            <div>
+                <p class="font-bold text-xs">Install Grab Income (PWA)</p>
+                <p class="text-[10px] text-emerald-100">Use like a professional app offline</p>
+            </div>
+        </div>
+        <button onclick="triggerInstall()" class="bg-white text-emerald-800 font-bold px-3 py-1.5 rounded-xl text-xs shadow hover:bg-emerald-50 transition active:scale-95">
+            Install
+        </button>
+    </div>
+
+    <header class="bg-gradient-to-r from-[#00B14F] via-teal-600 to-cyan-600 text-white shadow-md rounded-b-3xl border-b border-emerald-500/20 mb-4">
+        <div class="max-w-md mx-auto px-5 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-white/25 backdrop-blur-md flex items-center justify-center text-white shadow-inner font-bold text-lg border border-white/30">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+                <div>
+                    <h1 class="brand-font font-bold text-base tracking-tight text-white">Grab Income</h1>
+                    <p class="text-[10px] text-emerald-100 font-medium">Financial Dashboard</p>
+                </div>
+            </div>
+            <div class="flex bg-black/15 p-1 rounded-2xl text-xs backdrop-blur-sm border border-white/20">
+                <button id="btnDailyView" onclick="switchView('daily')" class="px-3 py-1.5 rounded-xl font-semibold bg-white text-emerald-700 shadow-sm transition">Daily</button>
+                <button id="btnRangeView" onclick="switchView('range')" class="px-3 py-1.5 rounded-xl font-semibold text-emerald-100 hover:text-white transition">Analytics</button>
+            </div>
+        </div>
+    </header>
+
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-xs w-full pointer-events-none"></div>
+
+    <main class="max-w-md mx-auto px-4 py-2 space-y-4">
+
+        <!-- DAILY VIEW -->
+        <div id="dailyViewContainer" class="space-y-4">
+            
+            <!-- Date Selector Card with Swipe -->
+            <div id="dateCard" class="bg-white/90 backdrop-blur-md rounded-3xl p-4 shadow-sm border border-emerald-100/80 touch-swipe-area">
+                <div class="flex justify-between items-center">
+                    <button onclick="changeDate(-1)" class="w-9 h-9 flex items-center justify-center rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 active:scale-95 transition">
+                        <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                    <div class="text-center flex-1 mx-2">
+                        <span id="dateTagLabel" class="inline-block px-3 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100/80 text-emerald-800 mb-1 border border-emerald-200">Today</span>
+                        <input type="date" id="selectedDateInput" onchange="onDateInputChange(this.value)" class="block mx-auto text-center font-bold text-slate-800 bg-transparent border-b border-dashed border-emerald-300 focus:outline-none focus:border-emerald-600 text-sm">
+                    </div>
+                    <button onclick="changeDate(1)" class="w-9 h-9 flex items-center justify-center rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 active:scale-95 transition">
+                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-3 gap-2.5">
+                <div class="bg-white/90 backdrop-blur-md p-3 rounded-3xl shadow-sm border border-emerald-100/80 text-center">
+                    <span class="text-[11px] font-medium text-slate-400 block mb-1">Gross Fare</span>
+                    <span id="summaryGross" class="font-bold text-emerald-600 text-sm">RM 0.00</span>
+                </div>
+                <div class="bg-white/90 backdrop-blur-md p-3 rounded-3xl shadow-sm border border-emerald-100/80 text-center">
+                    <span class="text-[11px] font-medium text-slate-400 block mb-1">Total Cost</span>
+                    <span id="summaryCost" class="font-bold text-rose-500 text-sm">RM 0.00</span>
+                </div>
+                <div class="bg-white/90 backdrop-blur-md p-3 rounded-3xl shadow-sm border border-emerald-100/80 text-center">
+                    <span class="text-[11px] font-medium text-slate-400 block mb-1">Net Profit</span>
+                    <span id="summaryProfit" class="font-bold text-blue-600 text-sm">RM 0.00</span>
+                </div>
+            </div>
+
+            <!-- Net Margin Card & WhatsApp Copy -->
+            <div class="bg-gradient-to-br from-[#00B14F] to-teal-600 text-white rounded-3xl p-4 shadow-sm flex items-center justify-between border border-emerald-400/30">
+                <div>
+                    <span class="text-[11px] text-emerald-100 uppercase tracking-wider font-medium block">Net Margin</span>
+                    <div class="flex items-baseline gap-2 mt-0.5">
+                        <span id="summaryMargin" class="text-xl font-black">0.0%</span>
+                        <span class="text-[11px] text-emerald-100">of gross</span>
+                    </div>
+                </div>
+                <button onclick="copyWhatsAppDaily()" class="bg-white text-emerald-800 hover:bg-emerald-50 font-semibold px-3.5 py-2 rounded-2xl text-xs flex items-center gap-2 shadow-sm transition active:scale-95">
+                    <i class="fa-brands fa-whatsapp text-[#00B14F] text-base"></i> WhatsApp
+                </button>
+            </div>
+
+            <!-- Fare Form -->
+            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-4 shadow-sm border border-emerald-100/80">
+                <h2 class="text-xs font-bold text-slate-800 mb-2.5 flex items-center gap-2">
+                    <i class="fa-solid fa-money-bill-wave text-emerald-600"></i> Daily Fare Income
+                </h2>
+                <form id="fareForm" onsubmit="saveFare(event)" class="space-y-2.5">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs font-semibold">RM</span>
+                        <input type="text" id="fareInput" inputmode="decimal" placeholder="0.00" class="w-full pl-9 pr-3 py-2.5 bg-emerald-50/40 border border-emerald-200/60 rounded-2xl text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-[#00B14F] text-sm">
+                    </div>
+                    <button type="submit" class="w-full bg-[#00B14F] hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-2xl text-xs transition shadow-sm active:scale-95">
+                        RECORD
+                    </button>
+                </form>
+            </div>
+
+            <!-- Petrol Form -->
+            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-4 shadow-sm border border-emerald-100/80">
+                <h2 class="text-xs font-bold text-slate-800 mb-2.5 flex items-center gap-2">
+                    <i class="fa-solid fa-gas-pump text-amber-500"></i> Petrol Expense
+                </h2>
+                <form id="petrolForm" onsubmit="saveExpense(event, 'Petrol')" class="space-y-2.5">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs font-semibold">RM</span>
+                            <input type="text" id="petrolAmount" inputmode="decimal" placeholder="0.00" required class="w-full pl-9 pr-3 py-2.5 bg-amber-50/40 border border-amber-200/60 rounded-2xl text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm">
+                        </div>
+                        <input type="text" id="petrolNote" placeholder="Note (e.g. Petronas)" class="w-full px-3 py-2.5 bg-amber-50/40 border border-amber-200/60 rounded-2xl text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    </div>
+                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5 rounded-2xl text-xs transition shadow-sm active:scale-95">
+                        RECORD
+                    </button>
+                </form>
+            </div>
+
+            <!-- Food Form -->
+            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-4 shadow-sm border border-emerald-100/80">
+                <h2 class="text-xs font-bold text-slate-800 mb-2.5 flex items-center gap-2">
+                    <i class="fa-solid fa-utensils text-rose-500"></i> Food Expense
+                </h2>
+                <form id="diningForm" onsubmit="saveExpense(event, 'Food')" class="space-y-2.5">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs font-semibold">RM</span>
+                            <input type="text" id="diningAmount" inputmode="decimal" placeholder="0.00" required class="w-full pl-9 pr-3 py-2.5 bg-rose-50/40 border border-rose-200/60 rounded-2xl text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500 text-sm">
+                        </div>
+                        <input type="text" id="diningNote" placeholder="Note (e.g. Lunch)" class="w-full px-3 py-2.5 bg-rose-50/40 border border-rose-200/60 rounded-2xl text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500">
+                    </div>
+                    <button type="submit" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-2.5 rounded-2xl text-xs transition shadow-sm active:scale-95">
+                        RECORD
+                    </button>
+                </form>
+            </div>
+
+            <!-- Other Expenses Form -->
+            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-4 shadow-sm border border-emerald-100/80">
+                <h2 class="text-xs font-bold text-slate-800 mb-2.5 flex items-center gap-2">
+                    <i class="fa-solid fa-receipt text-indigo-500"></i> Other Expenses
+                </h2>
+                <form id="othersForm" onsubmit="saveExpense(event, 'Others')" class="space-y-2.5">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs font-semibold">RM</span>
+                            <input type="text" id="othersAmount" inputmode="decimal" placeholder="0.00" required class="w-full pl-9 pr-3 py-2.5 bg-indigo-50/40 border border-indigo-200/60 rounded-2xl text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                        </div>
+                        <input type="text" id="othersNote" placeholder="Note (e.g. Toll / Parking)" class="w-full px-3 py-2.5 bg-indigo-50/40 border border-indigo-200/60 rounded-2xl text-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <button type="submit" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2.5 rounded-2xl text-xs transition shadow-sm active:scale-95">
+                        RECORD
+                    </button>
+                </form>
+            </div>
+
+            <!-- Expense Breakdown Bars -->
+            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-4 shadow-sm border border-emerald-100/80">
+                <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Daily Cost Breakdown (% of Income)</h3>
+                <div id="expenseBreakdownBars" class="space-y-2.5 text-xs">
+                    <p class="text-slate-400 text-center py-2">No expense records for today.</p>
+                </div>
+            </div>
+
+            <!-- Expense Log List -->
+            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-4 shadow-sm border border-emerald-100/80">
+                <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Expense Log</h3>
+                <div id="expenseLogList" class="divide-y divide-slate-100 max-h-60 overflow-y-auto">
+                    <p class="text-slate-400 text-center py-4 text-xs">No expenses recorded yet.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RANGE VIEW -->
+        <div id="rangeViewContainer" class="space-y-4 hidden">
+            
+            <!-- Interactive Flight/Agoda Style Date Range Picker Card -->
+            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-4 shadow-sm border border-emerald-100/80 space-y-3">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xs font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-days text-[#00B14F]"></i> Select Date Range
+                    </h2>
+                    <span id="rangeSelectedText" class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200"></span>
+                </div>
+
+                <!-- Hidden inputs for compatibility -->
+                <input type="hidden" id="rangeStartDate">
+                <input type="hidden" id="rangeEndDate">
+
+                <!-- Interactive Calendar Widget -->
+                <div class="border border-emerald-100 rounded-2xl p-3 bg-slate-50/50 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <button onclick="changeCalendarMonth(-1)" class="w-8 h-8 rounded-xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-slate-700 hover:bg-emerald-50 transition">
+                            <i class="fa-solid fa-chevron-left text-xs"></i>
+                        </button>
+                        <span id="calendarMonthTitle" class="font-bold text-slate-800 text-xs">Month Year</span>
+                        <button onclick="changeCalendarMonth(1)" class="w-8 h-8 rounded-xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-slate-700 hover:bg-emerald-50 transition">
+                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+
+                    <!-- Days Header -->
+                    <div class="grid grid-cols-7 text-center text-[10px] font-bold text-slate-400 uppercase">
+                        <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                    </div>
+
+                    <!-- Days Grid -->
+                    <div id="calendarGrid" class="grid grid-cols-7 gap-1 text-center text-xs">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Combined Summary Card -->
+            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-4 shadow-sm border border-emerald-100/80 space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Combined Summary</h3>
+                    <button onclick="copyWhatsAppRange()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold px-3 py-1.5 rounded-2xl text-xs flex items-center gap-1.5 transition active:scale-95">
+                        <i class="fa-solid fa-copy text-[#00B14F]"></i> Copy
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-2.5 pt-1">
+                    <div class="bg-emerald-50/30 p-3 rounded-2xl border border-emerald-100/60">
+                        <span class="text-[11px] text-slate-400 block mb-0.5">Recorded Days</span>
+                        <span id="rangeTotalDays" class="font-bold text-slate-800 text-sm">0 Days</span>
+                    </div>
+                    <div class="bg-emerald-50/30 p-3 rounded-2xl border border-emerald-100/60">
+                        <span class="text-[11px] text-slate-400 block mb-0.5">Total Gross Fare</span>
+                        <span id="rangeTotalFare" class="font-bold text-emerald-600 text-sm">RM 0.00</span>
+                    </div>
+                    <div class="bg-emerald-50/30 p-3 rounded-2xl border border-emerald-100/60">
+                        <span class="text-[11px] text-slate-400 block mb-0.5">Total Cost</span>
+                        <span id="rangeTotalCost" class="font-bold text-rose-500 text-sm">RM 0.00</span>
+                    </div>
+                    <div class="bg-emerald-50/30 p-3 rounded-2xl border border-emerald-100/60">
+                        <span class="text-[11px] text-slate-400 block mb-0.5">Total Net Profit</span>
+                        <span id="rangeTotalProfit" class="font-bold text-blue-600 text-sm">RM 0.00</span>
+                    </div>
+                </div>
+                <div class="pt-2 border-t border-slate-100 space-y-2">
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Daily Cost Breakdown (% of Income)</h3>
+                    <div id="rangeCategoryBreakdown" class="space-y-2.5 text-xs">
+                        <p class="text-slate-400 text-center py-2">No expense records in this range.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Chart Card -->
+            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-4 shadow-sm border border-emerald-100/80 space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Performance Chart</h3>
+                    <div class="flex bg-emerald-50/60 p-1 rounded-2xl text-xs gap-1 border border-emerald-200/60">
+                        <button onclick="setChartMetric('fare')" id="btnChartFare" class="px-2.5 py-1 rounded-xl font-semibold bg-white text-emerald-700 shadow-sm transition">Fare</button>
+                        <button onclick="setChartMetric('cost')" id="btnChartCost" class="px-2.5 py-1 rounded-xl font-semibold text-slate-600 transition">Cost</button>
+                        <button onclick="setChartMetric('profit')" id="btnChartProfit" class="px-2.5 py-1 rounded-xl font-semibold text-slate-600 transition">Profit</button>
+                    </div>
+                </div>
+                <div class="relative h-60 w-full">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Daily Breakdown List Card -->
+            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-4 shadow-sm border border-emerald-100/80 space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Daily Breakdown</h3>
+                    <div class="flex bg-emerald-50/60 p-1 rounded-2xl text-xs gap-1 border border-emerald-200/60">
+                        <button onclick="setRangeListMetric('fare')" id="btnListFare" class="px-2.5 py-1 rounded-xl font-semibold bg-white text-emerald-700 shadow-sm transition">Fare</button>
+                        <button onclick="setRangeListMetric('cost')" id="btnListCost" class="px-2.5 py-1 rounded-xl font-semibold text-slate-600 transition">Cost</button>
+                        <button onclick="setRangeListMetric('profit')" id="btnListProfit" class="px-2.5 py-1 rounded-xl font-semibold text-slate-600 transition">Profit</button>
+                    </div>
+                </div>
+                <div id="rangeDailyList" class="divide-y divide-slate-100 max-h-72 overflow-y-auto">
+                    <p class="text-slate-400 text-center py-4 text-xs">No data within this date range.</p>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        const DB_KEY = 'grab_income_tracker_v3_db';
+        let dbData = {};
+
+        let currentDate = getFormattedDate(new Date());
+        let activeView = 'daily';
+        let chartMetric = 'fare';
+        let rangeListMetric = 'fare';
+        let perfChartInstance = null;
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let deferredPrompt = null;
+
+        // Calendar selection state
+        let calYear = new Date().getFullYear();
+        let calMonth = new Date().getMonth();
+        let rangeStartDate = '';
+        let rangeEndDate = '';
+        let calendarPickerStep = 'start'; // 'start' then 'end'
+
+        window.onload = function() {
+            setupDynamicManifest();
+            loadDatabase();
+            registerServiceWorker();
+            setupPWAInstallListener();
+            
+            const todayObj = new Date();
+            const firstDayMonth = new Date(todayObj.getFullYear(), todayObj.getMonth(), 1);
+            rangeStartDate = getFormattedDate(firstDayMonth);
+            rangeEndDate = currentDate;
+            document.getElementById('rangeStartDate').value = rangeStartDate;
+            document.getElementById('rangeEndDate').value = rangeEndDate;
+            document.getElementById('selectedDateInput').value = currentDate;
+
+            setupSwipeListeners();
+            setupAutoDecimalInputs();
+            renderDailyView();
+        };
+
+        function setupDynamicManifest() {
+            const manifestObj = {
+                "name": "Grab Income",
+                "short_name": "GrabIncome",
+                "start_url": "./",
+                "display": "standalone",
+                "background_color": "#00B14F",
+                "theme_color": "#00B14F",
+                "icons": [
+                    {
+                        "src": "https://placehold.co/192x192/00B14F/ffffff?text=Grab",
+                        "sizes": "192x192",
+                        "type": "image/png"
+                    },
+                    {
+                        "src": "https://placehold.co/512x512/00B14F/ffffff?text=Grab",
+                        "sizes": "512x512",
+                        "type": "image/png"
+                    }
+                ]
+            };
+            const blob = new Blob([JSON.stringify(manifestObj)], {type: 'application/manifest+json'});
+            const manifestURL = URL.createObjectURL(blob);
+            const linkEl = document.getElementById('pwaManifestLink');
+            if (linkEl) linkEl.href = manifestURL;
+        }
+
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                const swCode = `
+                    self.addEventListener('install', (e) => { self.skipWaiting(); });
+                    self.addEventListener('activate', (e) => { e.waitUntil(clients.claim()); });
+                    self.addEventListener('fetch', (e) => { e.respondWith(fetch(e.request).catch(() => caches.match(e.request))); });
+                `;
+                const blob = new Blob([swCode], {type: 'text/javascript'});
+                const swUrl = URL.createObjectURL(blob);
+                navigator.serviceWorker.register(swUrl).catch(err => console.log('SW registration failed:', err));
+            }
+        }
+
+        function setupPWAInstallListener() {
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                const banner = document.getElementById('pwaInstallBanner');
+                if (banner) banner.classList.remove('hidden');
+            });
+
+            window.addEventListener('appinstalled', () => {
+                deferredPrompt = null;
+                const banner = document.getElementById('pwaInstallBanner');
+                if (banner) banner.classList.add('hidden');
+                showToast("Grab Income successfully installed!", "success");
+            });
+        }
+
+        function triggerInstall() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    deferredPrompt = null;
+                    const banner = document.getElementById('pwaInstallBanner');
+                    if (banner) banner.classList.add('hidden');
+                });
+            } else {
+                showToast("Use your browser menu and select 'Add to Home screen'.", "info");
+            }
+        }
+
+        function getFormattedDate(dateObj) {
+            const y = dateObj.getFullYear();
+            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const d = String(dateObj.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function formatDateReadable(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
+        function loadDatabase() {
+            try {
+                const stored = localStorage.getItem(DB_KEY);
+                dbData = stored ? JSON.parse(stored) : {};
+            } catch (e) {
+                dbData = {};
+            }
+        }
+
+        function saveDatabase() {
+            try {
+                localStorage.setItem(DB_KEY, JSON.stringify(dbData));
+            } catch (e) {
+                showToast("Error saving data!", "error");
+            }
+        }
+
+        function setupAutoDecimalInputs() {
+            const inputIds = ['fareInput', 'petrolAmount', 'diningAmount', 'othersAmount'];
+            inputIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+
+                el.addEventListener('input', function(e) {
+                    let cleanVal = this.value.replace(/\D/g, '');
+                    if (cleanVal === '') cleanVal = '0';
+                    let num = parseInt(cleanVal, 10);
+                    this.value = (num / 100).toFixed(2);
+                });
+
+                el.addEventListener('focus', function() {
+                    if (!this.value || this.value === '0.00') {
+                        this.value = '0.00';
+                    }
+                });
+            });
+        }
+
+        function setDecimalInputValue(id, numericValue) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.value = (numericValue || 0).toFixed(2);
+            }
+        }
+
+        function getDecimalInputValue(id) {
+            const el = document.getElementById(id);
+            if (!el || !el.value) return 0;
+            return parseFloat(el.value) || 0;
+        }
+
+        function switchView(view) {
+            activeView = view;
+            const btnDaily = document.getElementById('btnDailyView');
+            const btnRange = document.getElementById('btnRangeView');
+            const dailyContainer = document.getElementById('dailyViewContainer');
+            const rangeContainer = document.getElementById('rangeViewContainer');
+
+            if (view === 'daily') {
+                btnDaily.className = "px-3 py-1.5 rounded-xl font-semibold bg-white text-emerald-700 shadow-sm transition";
+                btnRange.className = "px-3 py-1.5 rounded-xl font-semibold text-emerald-100 hover:text-white transition";
+                dailyContainer.classList.remove('hidden');
+                rangeContainer.classList.add('hidden');
+                renderDailyView();
+            } else {
+                btnRange.className = "px-3 py-1.5 rounded-xl font-semibold bg-white text-emerald-700 shadow-sm transition";
+                btnDaily.className = "px-3 py-1.5 rounded-xl font-semibold text-emerald-100 hover:text-white transition";
+                rangeContainer.classList.remove('hidden');
+                dailyContainer.classList.add('hidden');
+                renderInteractiveCalendar();
+                updateRangeView();
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            let bgClass = type === 'success' ? 'bg-slate-900 border border-emerald-500/30 text-emerald-400' : (type === 'error' ? 'bg-slate-900 border border-rose-500/30 text-rose-400' : 'bg-slate-900 text-white');
+            let icon = type === 'success' ? 'fa-circle-check text-[#00B14F]' : (type === 'error' ? 'fa-triangle-exclamation text-rose-500' : 'fa-circle-info text-blue-400');
+
+            toast.className = `${bgClass} px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 text-xs font-semibold transition transform translate-y-2 opacity-0 pointer-events-auto`;
+            toast.innerHTML = `<i class="fa-solid ${icon} text-sm"></i><span>${message}</span>`;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => { toast.classList.remove('translate-y-2', 'opacity-0'); }, 10);
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function copyToClipboard(text, successMsg = "Successfully copied to clipboard!") {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                if (document.execCommand('copy')) {
+                    showToast(successMsg, 'success');
+                } else {
+                    showToast("Failed to copy text.", 'error');
+                }
+            } catch (err) {
+                showToast("Error copying text.", 'error');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function changeDate(days) {
+            const dateObj = new Date(currentDate);
+            dateObj.setDate(dateObj.getDate() + days);
+            currentDate = getFormattedDate(dateObj);
+            document.getElementById('selectedDateInput').value = currentDate;
+            renderDailyView();
+        }
+
+        function onDateInputChange(val) {
+            if (val) {
+                currentDate = val;
+                renderDailyView();
+            }
+        }
+
+        function setupSwipeListeners() {
+            const card = document.getElementById('dateCard');
+            card.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, {passive: true});
+
+            card.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, {passive: true});
+        }
+
+        function handleSwipe() {
+            const threshold = 50;
+            if (touchEndX < touchStartX - threshold) changeDate(1);
+            if (touchEndX > touchStartX + threshold) changeDate(-1);
+        }
+
+        function getRelativeDateTag(dateStr) {
+            const todayStr = getFormattedDate(new Date());
+            const targetDate = new Date(dateStr);
+            const todayDate = new Date(todayStr);
+            
+            const diffTime = todayDate - targetDate;
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0) return {text: "Today", class: "bg-emerald-50 text-emerald-700 border-emerald-100"};
+            if (diffDays === 1) return {text: "Yesterday", class: "bg-blue-50 text-blue-700 border-blue-100"};
+            if (diffDays > 1 && diffDays < 7) return {text: `${diffDays} days ago`, class: "bg-amber-50 text-amber-700 border-amber-100"};
+            if (diffDays < 0 && diffDays === -1) return {text: "Tomorrow", class: "bg-purple-50 text-purple-700 border-purple-100"};
+            return {text: `${diffDays} days ago`, class: "bg-slate-100 text-slate-700 border-slate-200"};
+        }
+
+        function getDayRecord(dateStr) {
+            if (!dbData[dateStr]) {
+                dbData[dateStr] = { fare: 0, expenses: [] };
+            }
+            return dbData[dateStr];
+        }
+
+        function checkAutoInsurance(dateStr) {
+            let record = getDayRecord(dateStr);
+            let insIndex = record.expenses.findIndex(ex => ex.category === 'Insurance');
+
+            if (record.fare > 0) {
+                if (insIndex === -1) {
+                    record.expenses.push({
+                        id: 'ins_' + Date.now(),
+                        category: 'Insurance',
+                        amount: 7.50,
+                        note: 'Automatic Daily Insurance'
+                    });
+                } else {
+                    record.expenses[insIndex].amount = 7.50;
+                }
+            } else {
+                if (insIndex !== -1) {
+                    record.expenses.splice(insIndex, 1);
+                }
+            }
+        }
+
+        function saveFare(e) {
+            e.preventDefault();
+            const val = getDecimalInputValue('fareInput');
+            let record = getDayRecord(currentDate);
+            record.fare = val;
+
+            checkAutoInsurance(currentDate);
+            saveDatabase();
+            renderDailyView();
+            showToast("Income updated!");
+        }
+
+        function saveExpense(e, defaultCategory) {
+            e.preventDefault();
+            let amount, note, category = defaultCategory;
+
+            if (defaultCategory === 'Petrol') {
+                amount = getDecimalInputValue('petrolAmount');
+                note = document.getElementById('petrolNote').value.trim() || 'Petrol';
+                document.getElementById('petrolForm').reset();
+                setDecimalInputValue('petrolAmount', 0);
+            } else if (defaultCategory === 'Food') {
+                amount = getDecimalInputValue('diningAmount');
+                note = document.getElementById('diningNote').value.trim() || 'Food';
+                document.getElementById('diningForm').reset();
+                setDecimalInputValue('diningAmount', 0);
+            } else {
+                amount = getDecimalInputValue('othersAmount');
+                note = document.getElementById('othersNote').value.trim() || 'Others';
+                document.getElementById('othersForm').reset();
+                setDecimalInputValue('othersAmount', 0);
+            }
+
+            if (amount <= 0) {
+                showToast("Please enter a valid expense amount.", "error");
+                return;
+            }
+
+            let record = getDayRecord(currentDate);
+            record.expenses.push({
+                id: 'exp_' + Date.now() + Math.random().toString(36).substring(2, 5),
+                category: category,
+                amount: amount,
+                note: note
+            });
+
+            saveDatabase();
+            renderDailyView();
+            showToast("Expense recorded!");
+        }
+
+        function deleteExpense(expId) {
+            let record = getDayRecord(currentDate);
+            record.expenses = record.expenses.filter(ex => ex.id !== expId);
+            saveDatabase();
+            renderDailyView();
+            showToast("Record deleted.", "info");
+        }
+
+        function renderDailyView() {
+            let record = getDayRecord(currentDate);
+            checkAutoInsurance(currentDate);
+
+            const tagInfo = getRelativeDateTag(currentDate);
+            const tagEl = document.getElementById('dateTagLabel');
+            tagEl.textContent = tagInfo.text;
+            tagEl.className = `inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold mb-1 border ${tagInfo.class}`;
+
+            setDecimalInputValue('fareInput', record.fare);
+
+            const totalCost = record.expenses.reduce((sum, item) => sum + item.amount, 0);
+            const netProfit = record.fare - totalCost;
+            const netMargin = record.fare > 0 ? (netProfit / record.fare) * 100 : 0;
+
+            document.getElementById('summaryGross').textContent = `RM ${record.fare.toFixed(2)}`;
+            document.getElementById('summaryCost').textContent = `RM ${totalCost.toFixed(2)}`;
+            document.getElementById('summaryProfit').textContent = `RM ${netProfit.toFixed(2)}`;
+            document.getElementById('summaryMargin').textContent = `${netMargin.toFixed(1)}%`;
+
+            renderExpenseBreakdown('expenseBreakdownBars', record.expenses, totalCost, record.fare);
+            renderExpenseLog(record.expenses);
+        }
+
+        function renderExpenseBreakdown(containerId, expenses, totalCost, grossFare) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            if (expenses.length === 0 || totalCost === 0) {
+                container.innerHTML = `<p class="text-slate-400 text-center py-2">No expense records.</p>`;
+                return;
+            }
+
+            let catMap = {};
+            expenses.forEach(ex => {
+                catMap[ex.category] = (catMap[ex.category] || 0) + ex.amount;
+            });
+
+            let html = '';
+            for (let [cat, amt] of Object.entries(catMap)) {
+                let pct = grossFare > 0 ? (amt / grossFare) * 100 : 0;
+                let colorClass = cat === 'Petrol' ? 'bg-amber-500' : (cat === 'Insurance' ? 'bg-purple-500' : (cat === 'Food' ? 'bg-rose-500' : 'bg-indigo-500'));
+                
+                html += `
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+                            <span>${cat}</span>
+                            <span>RM ${amt.toFixed(2)} (${pct.toFixed(0)}%)</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                            <div class="${colorClass} h-full rounded-full transition-all duration-500" style="width: ${Math.min(pct, 100)}%"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        function renderExpenseLog(expenses) {
+            const container = document.getElementById('expenseLogList');
+            if (expenses.length === 0) {
+                container.innerHTML = `<p class="text-slate-400 text-center py-4 text-xs">No expenses recorded yet.</p>`;
+                return;
+            }
+
+            let html = '';
+            expenses.forEach(ex => {
+                let badgeColor = ex.category === 'Petrol' ? 'bg-amber-50 text-amber-700 border-amber-200' : (ex.category === 'Insurance' ? 'bg-purple-50 text-purple-700 border-purple-200' : (ex.category === 'Food' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-indigo-50 text-indigo-700 border-indigo-200'));
+                html += `
+                    <div class="py-2.5 flex justify-between items-center text-xs">
+                        <div class="space-y-0.5">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold border ${badgeColor}">${ex.category}</span>
+                                <span class="font-bold text-slate-800">RM ${ex.amount.toFixed(2)}</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 font-medium">${ex.note}</p>
+                        </div>
+                        <button onclick="deleteExpense('${ex.id}')" class="text-slate-300 hover:text-rose-600 p-2 transition active:scale-95" title="Delete">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function copyWhatsAppDaily() {
+            let record = getDayRecord(currentDate);
+            let totalCost = record.expenses.reduce((sum, item) => sum + item.amount, 0);
+            let netProfit = record.fare - totalCost;
+            let netMargin = record.fare > 0 ? (netProfit / record.fare) * 100 : 0;
+            let formattedDate = formatDateReadable(currentDate);
+
+            let text = `📊 *GRAB INCOME DAILY REPORT*\n`;
+            text += `📅 Date: ${formattedDate}\n`;
+            text += `------------------------------------\n`;
+            text += `💰 Gross Fare: RM ${record.fare.toFixed(2)}\n`;
+            text += `💸 Total Cost: RM ${totalCost.toFixed(2)}\n`;
+            text += `📈 Net Profit: RM ${netProfit.toFixed(2)}\n`;
+            text += `🎯 Net Margin: ${netMargin.toFixed(1)}%\n`;
+            text += `------------------------------------\n`;
+            text += `📝 *Expense Breakdown:*\n`;
+            
+            if (record.expenses.length === 0) {
+                text += `- No expenses recorded\n`;
+            } else {
+                record.expenses.forEach(ex => {
+                    text += `- ${ex.category} (${ex.note}): RM ${ex.amount.toFixed(2)}\n`;
+                });
+            }
+            text += `------------------------------------\n`;
+            text += `*Automatic Generated Report*`;
+
+            copyToClipboard(text, "Daily report copied for WhatsApp!");
+        }
+
+        function setChartMetric(metric) {
+            chartMetric = metric;
+            document.getElementById('btnChartFare').className = metric === 'fare' ? "px-2.5 py-1 rounded-xl font-semibold bg-white text-emerald-700 shadow-sm transition" : "px-2.5 py-1 rounded-xl font-semibold text-slate-600 transition";
+            document.getElementById('btnChartCost').className = metric === 'cost' ? "px-2.5 py-1 rounded-xl font-semibold bg-white text-emerald-700 shadow-sm transition" : "px-2.5 py-1 rounded-xl font-semibold text-slate-600 transition";
+            document.getElementById('btnChartProfit').className = metric === 'profit' ? "px-2.5 py-1 rounded-xl font-semibold bg-white text-emerald-700 shadow-sm transition" : "px-2.5 py-1 rounded-xl font-semibold text-slate-600 transition";
+            updateRangeView();
+        }
+
+        function setRangeListMetric(metric) {
+            rangeListMetric = metric;
+            document.getElementById('btnListFare').className = metric === 'fare' ? "px-2.5 py-1 rounded-xl font-semibold bg-white text-emerald-700 shadow-sm transition" : "px-2.5 py-1 rounded-xl font-semibold text-slate-600 transition";
+            document.getElementById('btnListCost').className = metric === 'cost' ? "px-2.5 py-1 rounded-xl font-semibold bg-white text-emerald-700 shadow-sm transition" : "px-2.5 py-1 rounded-xl font-semibold text-slate-600 transition";
+            document.getElementById('btnListProfit').className = metric === 'profit' ? "px-2.5 py-1 rounded-xl font-semibold bg-white text-emerald-700 shadow-sm transition" : "px-2.5 py-1 rounded-xl font-semibold text-slate-600 transition";
+            updateRangeView();
+        }
+
+        // --- INTERACTIVE CALENDAR FOR ANALYTICS (GOOGLE FLIGHTS / AGODA STYLE) ---
+        function changeCalendarMonth(direction) {
+            calMonth += direction;
+            if (calMonth > 11) {
+                calMonth = 0;
+                calYear++;
+            } else if (calMonth < 0) {
+                calMonth = 11;
+                calYear--;
+            }
+            renderInteractiveCalendar();
+        }
+
+        function renderInteractiveCalendar() {
+            const titleEl = document.getElementById('calendarMonthTitle');
+            const gridEl = document.getElementById('calendarGrid');
+            const rangeTextEl = document.getElementById('rangeSelectedText');
+
+            if (!gridEl) return;
+
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            titleEl.textContent = `${monthNames[calMonth]} ${calYear}`;
+            rangeTextEl.textContent = rangeStartDate && rangeEndDate ? `${formatDateReadable(rangeStartDate)} ➔ ${formatDateReadable(rangeEndDate)}` : "Select Range";
+
+            let firstDayIndex = new Date(calYear, calMonth, 1).getDay();
+            let totalDays = new Date(calYear, calMonth + 1, 0).getDate();
+
+            let html = '';
+            // Blank padding for previous month
+            for (let i = 0; i < firstDayIndex; i++) {
+                html += `<div></div>`;
+            }
+
+            for (let day = 1; day <= totalDays; day++) {
+                let mStr = String(calMonth + 1).padStart(2, '0');
+                let dStr = String(day).padStart(2, '0');
+                let dateStr = `${calYear}-${mStr}-${dStr}`;
+
+                let record = dbData[dateStr] || { fare: 0, expenses: [] };
+                let hasFare = record.fare > 0;
+                
+                let isSelected = (dateStr === rangeStartDate || dateStr === rangeEndDate);
+                let isInRange = (rangeStartDate && rangeEndDate && dateStr > rangeStartDate && dateStr < rangeEndDate);
+
+                let cellBg = "bg-white hover:bg-emerald-50 text-slate-700 border border-slate-100";
+                if (isSelected) {
+                    cellBg = "bg-emerald-600 text-white font-bold shadow-sm";
+                } else if (isInRange) {
+                    cellBg = "bg-emerald-100 text-emerald-900";
+                }
+
+                html += `
+                    <div onclick="onCalendarDateClick('${dateStr}')" class="${cellBg} rounded-xl p-1.5 cursor-pointer transition flex flex-col justify-between items-center h-12">
+                        <span class="text-xs font-semibold">${day}</span>
+                        <span class="text-[9px] ${isSelected ? 'text-white' : (hasFare ? 'text-emerald-600 font-bold' : 'text-slate-300')}">${hasFare ? 'RM ' + Math.round(record.fare) : '-'}</span>
+                    </div>
+                `;
+            }
+            gridEl.innerHTML = html;
+        }
+
+        function onCalendarDateClick(dateStr) {
+            if (calendarPickerStep === 'start' || (rangeStartDate && rangeEndDate)) {
+                rangeStartDate = dateStr;
+                rangeEndDate = '';
+                calendarPickerStep = 'end';
+                showToast("Start date selected. Now choose end date.", "info");
+            } else {
+                if (dateStr < rangeStartDate) {
+                    rangeStartDate = dateStr;
+                } else {
+                    rangeEndDate = dateStr;
+                }
+                calendarPickerStep = 'start';
+                document.getElementById('rangeStartDate').value = rangeStartDate;
+                document.getElementById('rangeEndDate').value = rangeEndDate;
+                showToast("Date range updated!", "success");
+                updateRangeView();
+            }
+            renderInteractiveCalendar();
+        }
+
+        function getDatesInRange(startDateStr, endDateStr) {
+            let arr = [];
+            if (!startDateStr || !endDateStr) return arr;
+            let dt = new Date(startDateStr);
+            let endDt = new Date(endDateStr);
+
+            while (dt <= endDt) {
+                arr.push(getFormattedDate(dt));
+                dt.setDate(dt.getDate() + 1);
+            }
+            return arr;
+        }
+
+        function updateRangeView() {
+            const startStr = rangeStartDate;
+            const endStr = rangeEndDate;
+
+            if (!startStr || !endStr) return;
+
+            const dateList = getDatesInRange(startStr, endStr);
+
+            let totalDaysRecorded = 0;
+            let totalFare = 0;
+            let totalCost = 0;
+            let totalProfit = 0;
+            let rangeExpenses = [];
+
+            let chartLabels = [];
+            let chartValues = [];
+            let dailyListHtml = '';
+
+            dateList.forEach(dateStr => {
+                let record = dbData[dateStr] || { fare: 0, expenses: [] };
+                let dayCost = record.expenses.reduce((sum, item) => sum + item.amount, 0);
+                let dayProfit = record.fare - dayCost;
+
+                if (record.fare > 0 || dayCost > 0) totalDaysRecorded++;
+
+                totalFare += record.fare;
+                totalCost += dayCost;
+                totalProfit += dayProfit;
+
+                record.expenses.forEach(ex => {
+                    rangeExpenses.push(ex);
+                });
+
+                chartLabels.push(dateStr.slice(5));
+                if (chartMetric === 'fare') chartValues.push(record.fare);
+                else if (chartMetric === 'cost') chartValues.push(dayCost);
+                else chartValues.push(dayProfit);
+
+                let listVal = rangeListMetric === 'fare' ? record.fare : (rangeListMetric === 'cost' ? dayCost : dayProfit);
+                let badgeColor = rangeListMetric === 'fare' ? 'text-emerald-600' : (rangeListMetric === 'cost' ? 'text-rose-600' : 'text-blue-600');
+
+                dailyListHtml = `
+                    <div class="py-2.5 flex justify-between items-center text-xs">
+                        <div>
+                            <span class="font-bold text-slate-800">${formatDateReadable(dateStr)}</span>
+                            <p class="text-[11px] text-slate-400">Fare: RM ${record.fare.toFixed(2)} | Cost: RM ${dayCost.toFixed(2)}</p>
+                        </div>
+                        <span class="font-bold ${badgeColor}">RM ${listVal.toFixed(2)}</span>
+                    </div>
+                ` + dailyListHtml;
+            });
+
+            if (dateList.length === 0 || totalDaysRecorded === 0) {
+                dailyListHtml = `<p class="text-slate-400 text-center py-4 text-xs">No data within this date range.</p>`;
+            }
+
+            document.getElementById('rangeTotalDays').textContent = `${totalDaysRecorded} Days`;
+            document.getElementById('rangeTotalFare').textContent = `RM ${totalFare.toFixed(2)}`;
+            document.getElementById('rangeTotalCost').textContent = `RM ${totalCost.toFixed(2)}`;
+            document.getElementById('rangeTotalProfit').textContent = `RM ${totalProfit.toFixed(2)}`;
+
+            // Render Daily Cost Breakdown (% of Income) style for Range view
+            renderExpenseBreakdown('rangeCategoryBreakdown', rangeExpenses, totalCost, totalFare);
+
+            renderPerformanceChart(chartLabels, chartValues);
+            document.getElementById('rangeDailyList').innerHTML = dailyListHtml;
+        }
+
+        function renderPerformanceChart(labels, data) {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            
+            if (perfChartInstance) {
+                perfChartInstance.destroy();
+            }
+
+            let chartLabelName = chartMetric === 'fare' ? 'Gross Fare (RM)' : (chartMetric === 'cost' ? 'Total Cost (RM)' : 'Net Profit (RM)');
+            let chartColor = chartMetric === 'fare' ? '#00B14F' : (chartMetric === 'cost' ? '#e11d48' : '#2563eb');
+
+            perfChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: chartLabelName,
+                        data: data,
+                        backgroundColor: chartColor,
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } },
+                        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function copyWhatsAppRange() {
+            const dateList = getDatesInRange(rangeStartDate, rangeEndDate);
+
+            let activeDates = [];
+            let totalFare = 0;
+            let totalCost = 0;
+            let totalProfit = 0;
+            let categoryTotals = {};
+
+            dateList.forEach(dateStr => {
+                let record = dbData[dateStr] || { fare: 0, expenses: [] };
+                let dayCost = record.expenses.reduce((sum, item) => sum + item.amount, 0);
+                if (record.fare > 0 || dayCost > 0) {
+                    activeDates.push(dateStr);
+                    totalFare += record.fare;
+                    totalCost += dayCost;
+                    totalProfit += (record.fare - dayCost);
+
+                    record.expenses.forEach(ex => {
+                        categoryTotals[ex.category] = (categoryTotals[ex.category] || 0) + ex.amount;
+                    });
+                }
+            });
+
+            let periodText = "";
+            if (activeDates.length > 0) {
+                let firstActive = activeDates[0];
+                let lastActive = activeDates[activeDates.length - 1];
+                if (firstActive === lastActive) {
+                    periodText = formatDateReadable(firstActive);
+                } else {
+                    periodText = `${formatDateReadable(firstActive)} to ${formatDateReadable(lastActive)}`;
+                }
+            } else {
+                periodText = `${formatDateReadable(rangeStartDate)} to ${formatDateReadable(rangeEndDate)}`;
+            }
+
+            let text = `📊 *GRAB INCOME PERFORMANCE SUMMARY*\n`;
+            text += `📅 Period: ${periodText}\n`;
+            text += `------------------------------------\n`;
+            text += `🗓️ Recorded Days: ${activeDates.length} days\n`;
+            text += `💰 Total Gross Fare: RM ${totalFare.toFixed(2)}\n`;
+            text += `💸 Total Cost: RM ${totalCost.toFixed(2)}\n`;
+            text += `📈 Total Net Profit: RM ${totalProfit.toFixed(2)}\n`;
+            text += `------------------------------------\n`;
+            text += `📝 *Category Cost Breakdown:*\n`;
+
+            if (Object.keys(categoryTotals).length === 0) {
+                text += `- No expenses recorded\n`;
+            } else {
+                for (let [cat, amt] of Object.entries(categoryTotals)) {
+                    text += `- ${cat}: RM ${amt.toFixed(2)}\n`;
+                }
+            }
+            text += `------------------------------------\n`;
+            text += `*Automatic Generated Report*`;
+
+            copyToClipboard(text, "Date range summary copied for WhatsApp!");
+        }
+    </script>
+</body>
+</html>
+
