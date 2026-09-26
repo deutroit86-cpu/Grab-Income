@@ -75,6 +75,64 @@
 
     <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-xs w-full pointer-events-none"></div>
 
+    <!-- Petrol Calculator Modal -->
+    <div id="petrolCalcModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center px-4">
+        <div class="bg-white rounded-3xl p-5 max-w-xs w-full shadow-2xl space-y-4 border border-amber-100">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-calculator text-amber-500"></i> Petrol Calculator
+                </h3>
+                <button onclick="togglePetrolCalc(false)" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-[11px] font-semibold text-slate-500 block mb-1">Total Distance (KM)</label>
+                    <input type="text" id="calcKm" inputmode="decimal" placeholder="0.00" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-semibold text-xs focus:outline-none focus:ring-2 focus:ring-amber-500">
+                </div>
+                <div>
+                    <label class="text-[11px] font-semibold text-slate-500 block mb-1">Fuel Efficiency (KM / Liter)</label>
+                    <input type="text" id="calcKmPerLiter" inputmode="decimal" placeholder="12.00" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-semibold text-xs focus:outline-none focus:ring-2 focus:ring-amber-500">
+                </div>
+                <div>
+                    <label class="text-[11px] font-semibold text-slate-500 block mb-1">Price per Liter (RM)</label>
+                    <input type="text" id="calcPricePerLiter" inputmode="decimal" placeholder="2.05" value="2.05" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-semibold text-xs focus:outline-none focus:ring-2 focus:ring-amber-500">
+                </div>
+                <div class="bg-amber-50 p-2.5 rounded-xl border border-amber-200 flex justify-between items-center">
+                    <span class="text-xs font-semibold text-amber-800">Estimated Cost:</span>
+                    <span id="calcResultDisplay" class="font-bold text-amber-900 text-sm">RM 0.00</span>
+                </div>
+            </div>
+            <div class="flex gap-2 pt-1">
+                <button onclick="togglePetrolCalc(false)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 rounded-xl text-xs transition">Cancel</button>
+                <button onclick="applyPetrolCalc()" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 rounded-xl text-xs transition shadow-sm">Use Amount</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Target Margin Settings Modal -->
+    <div id="targetModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center px-4">
+        <div class="bg-white rounded-3xl p-5 max-w-xs w-full shadow-2xl space-y-4 border border-emerald-100">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-bullseye text-[#00B14F]"></i> Set Target Margin
+                </h3>
+                <button onclick="toggleTargetModal(false)" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div>
+                <label class="text-[11px] font-semibold text-slate-500 block mb-1">Target Net Margin (%)</label>
+                <input type="number" id="targetMarginInput" min="1" max="100" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-[#00B14F]">
+            </div>
+            <div class="flex gap-2 pt-1">
+                <button onclick="toggleTargetModal(false)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 rounded-xl text-xs transition">Cancel</button>
+                <button onclick="saveTargetMargin()" class="flex-1 bg-[#00B14F] hover:bg-emerald-700 text-white font-semibold py-2 rounded-xl text-xs transition shadow-sm">Save Target</button>
+            </div>
+        </div>
+    </div>
+
     <main class="max-w-md mx-auto px-4 py-2 space-y-4">
 
         <!-- DAILY VIEW -->
@@ -144,9 +202,14 @@
 
             <!-- Petrol Form -->
             <div class="bg-white/90 backdrop-blur-md rounded-3xl p-4 shadow-sm border border-emerald-100/80">
-                <h2 class="text-xs font-bold text-slate-800 mb-2.5 flex items-center gap-2">
-                    <i class="fa-solid fa-gas-pump text-amber-500"></i> Petrol Expense
-                </h2>
+                <div class="flex justify-between items-center mb-2.5">
+                    <h2 class="text-xs font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-gas-pump text-amber-500"></i> Petrol Expense
+                    </h2>
+                    <button type="button" onclick="togglePetrolCalc(true)" class="text-[11px] bg-amber-50 text-amber-700 font-semibold px-2.5 py-1 rounded-xl border border-amber-200 flex items-center gap-1 hover:bg-amber-100 transition">
+                        <i class="fa-solid fa-calculator"></i> Calc KM/L
+                    </button>
+                </div>
                 <form id="petrolForm" onsubmit="saveExpense(event, 'Petrol')" class="space-y-2.5">
                     <div class="grid grid-cols-2 gap-2">
                         <div class="relative">
@@ -257,6 +320,29 @@
                 </div>
             </div>
 
+            <!-- Target Margin Card & Analytics Summary -->
+            <div class="bg-white/90 backdrop-blur-md rounded-3xl p-4 shadow-sm border border-emerald-100/80 space-y-3">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Margin Target Analysis</h3>
+                        <span id="targetMarginBadge" class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Target: 80%</span>
+                    </div>
+                    <button onclick="toggleTargetModal(true)" class="text-xs text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-xl font-semibold border border-emerald-200 transition">
+                        <i class="fa-solid fa-gear"></i> Set Target
+                    </button>
+                </div>
+                <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-3.5 rounded-2xl flex justify-between items-center shadow-inner">
+                    <div>
+                        <span class="text-[10px] text-slate-400 uppercase font-medium block">Actual vs Target Gap</span>
+                        <span id="targetGapAmount" class="font-bold text-sm">RM 0.00</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] text-slate-400 uppercase font-medium block">Margin Achieved</span>
+                        <span id="targetActualMargin" class="font-bold text-emerald-400 text-base">0.0%</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Combined Summary Card -->
             <div class="bg-white/90 backdrop-blur-md rounded-3xl p-4 shadow-sm border border-emerald-100/80 space-y-3">
                 <div class="flex justify-between items-center">
@@ -326,8 +412,10 @@
     </main>
 
     <script>
-        const DB_KEY = 'grab_income_tracker_v3_db';
+        const DB_KEY = 'grab_income_tracker_v4_db';
+        const SETTINGS_KEY = 'grab_income_settings_v1';
         let dbData = {};
+        let appSettings = { targetMargin: 80 };
 
         let currentDate = getFormattedDate(new Date());
         let activeView = 'daily';
@@ -344,11 +432,12 @@
         let calMonth = new Date().getMonth();
         let rangeStartDate = '';
         let rangeEndDate = '';
-        let calendarPickerStep = 'start'; // 'start' then 'end'
+        let calendarPickerStep = 'start';
 
         window.onload = function() {
             setupDynamicManifest();
             loadDatabase();
+            loadSettings();
             registerServiceWorker();
             setupPWAInstallListener();
             
@@ -362,6 +451,7 @@
 
             setupSwipeListeners();
             setupAutoDecimalInputs();
+            setupPetrolCalcInputs();
             renderDailyView();
         };
 
@@ -464,6 +554,23 @@
             }
         }
 
+        function loadSettings() {
+            try {
+                const stored = localStorage.getItem(SETTINGS_KEY);
+                if (stored) {
+                    appSettings = JSON.parse(stored);
+                }
+            } catch (e) {
+                appSettings = { targetMargin: 80 };
+            }
+        }
+
+        function saveSettings() {
+            try {
+                localStorage.setItem(SETTINGS_KEY, JSON.stringify(appSettings));
+            } catch (e) {}
+        }
+
         function setupAutoDecimalInputs() {
             const inputIds = ['fareInput', 'petrolAmount', 'diningAmount', 'othersAmount'];
             inputIds.forEach(id => {
@@ -483,6 +590,77 @@
                     }
                 });
             });
+        }
+
+        function setupPetrolCalcInputs() {
+            const calcInputs = ['calcKm', 'calcKmPerLiter', 'calcPricePerLiter'];
+            calcInputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener('input', function() {
+                    let cleanVal = this.value.replace(/\D/g, '');
+                    if (cleanVal === '') cleanVal = '0';
+                    let num = parseInt(cleanVal, 10);
+                    this.value = (num / 100).toFixed(2);
+                    calculatePetrolEstimate();
+                });
+            });
+        }
+
+        function calculatePetrolEstimate() {
+            let km = parseFloat(document.getElementById('calcKm').value) || 0;
+            let kml = parseFloat(document.getElementById('calcKmPerLiter').value) || 0;
+            let ppl = parseFloat(document.getElementById('calcPricePerLiter').value) || 0;
+
+            let totalCost = 0;
+            if (kml > 0 && ppl > 0) {
+                totalCost = (km / kml) * ppl;
+            }
+            document.getElementById('calcResultDisplay').textContent = `RM ${totalCost.toFixed(2)}`;
+        }
+
+        function togglePetrolCalc(show) {
+            const modal = document.getElementById('petrolCalcModal');
+            if (show) {
+                modal.classList.remove('hidden');
+                document.getElementById('calcKm').value = '0.00';
+                document.getElementById('calcKmPerLiter').value = '12.00';
+                document.getElementById('calcPricePerLiter').value = '2.05';
+                calculatePetrolEstimate();
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function applyPetrolCalc() {
+            let resultText = document.getElementById('calcResultDisplay').textContent.replace('RM ', '');
+            document.getElementById('petrolAmount').value = resultText;
+            document.getElementById('petrolNote').value = 'Calculated (KM/L)';
+            togglePetrolCalc(false);
+            showToast("Calculated petrol amount applied!");
+        }
+
+        function toggleTargetModal(show) {
+            const modal = document.getElementById('targetModal');
+            if (show) {
+                document.getElementById('targetMarginInput').value = appSettings.targetMargin;
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function saveTargetMargin() {
+            let val = parseInt(document.getElementById('targetMarginInput').value, 10);
+            if (val > 0 && val <= 100) {
+                appSettings.targetMargin = val;
+                saveSettings();
+                toggleTargetModal(false);
+                updateRangeView();
+                showToast("Target margin updated!");
+            } else {
+                showToast("Please enter a valid percentage (1-100).", "error");
+            }
         }
 
         function setDecimalInputValue(id, numericValue) {
@@ -609,7 +787,10 @@
 
         function getDayRecord(dateStr) {
             if (!dbData[dateStr]) {
-                dbData[dateStr] = { fare: 0, expenses: [] };
+                dbData[dateStr] = { fare: 0, expenses: [], insuranceDeleted: false };
+            }
+            if (dbData[dateStr].insuranceDeleted === undefined) {
+                dbData[dateStr].insuranceDeleted = false;
             }
             return dbData[dateStr];
         }
@@ -618,7 +799,7 @@
             let record = getDayRecord(dateStr);
             let insIndex = record.expenses.findIndex(ex => ex.category === 'Insurance');
 
-            if (record.fare > 0) {
+            if (record.fare > 0 && !record.insuranceDeleted) {
                 if (insIndex === -1) {
                     record.expenses.push({
                         id: 'ins_' + Date.now(),
@@ -629,10 +810,11 @@
                 } else {
                     record.expenses[insIndex].amount = 7.50;
                 }
-            } else {
+            } else if (record.fare === 0) {
                 if (insIndex !== -1) {
                     record.expenses.splice(insIndex, 1);
                 }
+                record.insuranceDeleted = false;
             }
         }
 
@@ -640,6 +822,9 @@
             e.preventDefault();
             const val = getDecimalInputValue('fareInput');
             let record = getDayRecord(currentDate);
+            if (val > 0 && record.fare === 0) {
+                record.insuranceDeleted = false; // Reset delete flag on new fare entry
+            }
             record.fare = val;
 
             checkAutoInsurance(currentDate);
@@ -689,6 +874,10 @@
 
         function deleteExpense(expId) {
             let record = getDayRecord(currentDate);
+            let targetExp = record.expenses.find(ex => ex.id === expId);
+            if (targetExp && targetExp.category === 'Insurance') {
+                record.insuranceDeleted = true;
+            }
             record.expenses = record.expenses.filter(ex => ex.id !== expId);
             saveDatabase();
             renderDailyView();
@@ -826,7 +1015,7 @@
             updateRangeView();
         }
 
-        // --- INTERACTIVE CALENDAR FOR ANALYTICS (GOOGLE FLIGHTS / AGODA STYLE) ---
+        // --- INTERACTIVE CALENDAR FOR ANALYTICS ---
         function changeCalendarMonth(direction) {
             calMonth += direction;
             if (calMonth > 11) {
@@ -854,7 +1043,6 @@
             let totalDays = new Date(calYear, calMonth + 1, 0).getDate();
 
             let html = '';
-            // Blank padding for previous month
             for (let i = 0; i < firstDayIndex; i++) {
                 html += `<div></div>`;
             }
@@ -977,14 +1165,29 @@
                 dailyListHtml = `<p class="text-slate-400 text-center py-4 text-xs">No data within this date range.</p>`;
             }
 
+            // Target Margin calculations
+            document.getElementById('targetMarginBadge').textContent = `Target: ${appSettings.targetMargin}%`;
+            let actualMargin = totalFare > 0 ? (totalProfit / totalFare) * 100 : 0;
+            let targetProfitNeeded = totalFare * (appSettings.targetMargin / 100);
+            let profitGap = totalProfit - targetProfitNeeded;
+
+            let gapFormatted = "";
+            if (profitGap >= 0) {
+                gapFormatted = `+RM ${profitGap.toFixed(2)} (Surplus)`;
+                document.getElementById('targetGapAmount').className = "font-bold text-sm text-emerald-400";
+            } else {
+                gapFormatted = `-RM ${Math.abs(profitGap).toFixed(2)} (Shortfall)`;
+                document.getElementById('targetGapAmount').className = "font-bold text-sm text-rose-400";
+            }
+            document.getElementById('targetGapAmount').textContent = gapFormatted;
+            document.getElementById('targetActualMargin').textContent = `${actualMargin.toFixed(1)}%`;
+
             document.getElementById('rangeTotalDays').textContent = `${totalDaysRecorded} Days`;
             document.getElementById('rangeTotalFare').textContent = `RM ${totalFare.toFixed(2)}`;
             document.getElementById('rangeTotalCost').textContent = `RM ${totalCost.toFixed(2)}`;
             document.getElementById('rangeTotalProfit').textContent = `RM ${totalProfit.toFixed(2)}`;
 
-            // Render Daily Cost Breakdown (% of Income) style for Range view
             renderExpenseBreakdown('rangeCategoryBreakdown', rangeExpenses, totalCost, totalFare);
-
             renderPerformanceChart(chartLabels, chartValues);
             document.getElementById('rangeDailyList').innerHTML = dailyListHtml;
         }
@@ -1059,6 +1262,11 @@
                 periodText = `${formatDateReadable(rangeStartDate)} to ${formatDateReadable(rangeEndDate)}`;
             }
 
+            let actualMargin = totalFare > 0 ? (totalProfit / totalFare) * 100 : 0;
+            let targetProfitNeeded = totalFare * (appSettings.targetMargin / 100);
+            let profitGap = totalProfit - targetProfitNeeded;
+            let gapText = profitGap >= 0 ? `+RM ${profitGap.toFixed(2)} (Surplus)` : `-RM ${Math.abs(profitGap).toFixed(2)} (Shortfall)`;
+
             let text = `📊 *GRAB INCOME PERFORMANCE SUMMARY*\n`;
             text += `📅 Period: ${periodText}\n`;
             text += `------------------------------------\n`;
@@ -1066,6 +1274,8 @@
             text += `💰 Total Gross Fare: RM ${totalFare.toFixed(2)}\n`;
             text += `💸 Total Cost: RM ${totalCost.toFixed(2)}\n`;
             text += `📈 Total Net Profit: RM ${totalProfit.toFixed(2)}\n`;
+            text += `🎯 Net Margin: ${actualMargin.toFixed(1)}% (Target: ${appSettings.targetMargin}%)\n`;
+            text += `⚖️ Target Gap: ${gapText}\n`;
             text += `------------------------------------\n`;
             text += `📝 *Category Cost Breakdown:*\n`;
 
